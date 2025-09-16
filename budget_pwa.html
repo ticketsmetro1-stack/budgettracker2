@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Budget PWA — 2-column Goals</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Budget PWA">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <style>
+    :root{
+      --bg:#f4f6f8; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --radius:16px;
+      --gap:16px; --text:#111827;
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
+    }
+    [data-theme="dark"]{
+      --bg:#0f172a; --card:#1e293b; --muted:#94a3b8; --accent:#3b82f6; --text:#f1f5f9;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+    .app{max-width:900px;margin:24px auto;padding:16px;}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+    h1{font-size:22px;font-weight:700;margin:0;color:var(--text)}
+    .controls{margin-left:auto;display:flex;gap:10px}
+    button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:12px;font-size:14px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.1);transition:all .2s}
+    button:hover{opacity:.9;}
+
+    .group-header{font-weight:700;margin-top:20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+    .group-header button{background:none;color:var(--muted);font-size:14px;padding:0 6px}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--gap);}
+    .goal{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:var(--radius);background:var(--card);box-shadow:0 6px 20px rgba(0,0,0,0.05);transition:transform .2s;flex-wrap:wrap}
+    .goal:hover{transform:translateY(-2px)}
+    .left{display:flex;gap:12px;align-items:center;flex:1;min-width:160px}
+    .badge{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+    .meta{display:flex;flex-direction:column}
+    .name{font-weight:600;font-size:15px}
+    .note{font-size:12px;color:var(--muted)}
+    .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:140px}
+    .amount{font-weight:700;font-size:16px;color:var(--text)}
+    .progress{width:100%;height:6px;background:#e5e7eb;border-radius:8px;overflow:hidden;margin-top:4px}
+    .progress>div{height:100%;background:var(--accent);transition:width .3s}
+    [data-theme="dark"] .progress{background:#334155}
+    .actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+    .add{padding:6px 10px;border-radius:8px;background:#f3f4f6;color:#111827;border:none;cursor:pointer;transition:background .2s}
+    .add:hover{background:#e5e7eb}
+    [data-theme="dark"] .add{background:#334155;color:#f1f5f9}
+    [data-theme="dark"] .add:hover{background:#475569}
+
+    .form{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+    input,select{padding:10px 12px;border-radius:10px;border:1px solid #d1d5db;font-size:14px;background:var(--card);color:var(--text)}
+    input[type=color]{width:42px;height:42px;border:none;border-radius:8px;padding:0;cursor:pointer}
+
+    footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
+
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px)}
+    .modal.show{display:flex}
+    .sheet{background:var(--card);padding:20px;border-radius:var(--radius);min-width:280px;max-width:400px;box-shadow:0 10px 30px rgba(0,0,0,0.15)}
+    .transactions{margin-top:10px;font-size:13px;max-height:250px;overflow-y:auto}
+    .transaction{padding:6px 0;border-bottom:1px solid #d1d5db;display:flex;justify-content:space-between;align-items:center}
+    .transaction span{margin-right:8px}
+    .summary{margin-bottom:20px;padding:12px;border-radius:var(--radius);background:var(--card);box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+    .summary h2{margin:0 0 8px;font-size:18px}
+    .summary ul{list-style:none;padding:0;margin:0}
+    .summary li{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
+    .summary li span:first-child{font-weight:500}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <h1>Budget Goals</h1>
+      <div class="controls">
+        <button id="themeBtn">🌙</button>
+        <button id="importBtn">Import</button>
+        <button id="exportBtn">Export</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+    </header>
+
+    <section id="summary" class="summary"></section>
+
+    <section>
+      <div class="form">
+        <input id="newName" placeholder="Goal name" type="text">
+        <input id="newStart" placeholder="Start amount" type="number" value="0">
+        <input id="newTarget" placeholder="Target (optional)" type="number">
+        <input id="newDate" placeholder="Statement date (YYYY-MM-DD)" type="text">
+        <input id="newGroup" placeholder="Group" type="text">
+        <input id="newColor" type="color" value="#10b981" title="Pick color">
+        <button id="addGoal">Add Goal</button>
+      </div>
+
+      <div id="gridContainer"></div>
+    </section>
+
+    <footer>
+      Double tap back of iPhone → Shortcut → Opens this app. Works offline after first load.
+    </footer>
+  </div>
+
+  <!-- modal for adding amount -->
+  <div id="modal" class="modal"><div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong id="modalTitle">Add amount</strong>
+        <button id="closeModal">✕</button>
+      </div>
+      <label class="note">Amount</label>
+      <input id="amtInput" type="number" placeholder="e.g. 50" style="width:100%;margin-bottom:10px">
+      <label class="note">Category</label>
+      <select id="amtCat" style="width:100%;margin-bottom:10px">
+        <option>Food</option><option>Transportation</option><option>Entertainment</option><option>Bills</option><option>Other</option>
+      </select>
+      <label class="note">Note</label>
+      <input id="amtNote" type="text" placeholder="Optional note" style="width:100%;margin-bottom:10px">
+      <label class="note">Action</label>
+      <select id="amtType" style="width:100%;margin-bottom:14px">
+        <option value="add">Add</option><option value="subtract">Subtract</option>
+      </select>
+      <div style="display:flex;gap:10px;justify-content:flex-end"><button id="confirmAmt">Confirm</button></div>
+    </div></div>
+
+  <!-- modal for transactions -->
+  <div id="transModal" class="modal"><div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong id="transTitle">Transactions</strong>
+        <button id="closeTrans">✕</button>
+      </div>
+      <div id="transList" class="transactions"></div>
+    </div></div>
+
+  <!-- modal for category popup -->
+  <div id="catModal" class="modal"><div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong id="catTitle">Category Details</strong>
+        <button id="closeCat">✕</button>
+      </div>
+      <div id="catList" class="transactions"></div>
+    </div></div>
+
+  <script>
+    const STORAGE_KEY = 'budget_goals_v3';
+    function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+    let goals = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    const gridContainer=document.getElementById('gridContainer');
+    const newName=document.getElementById('newName');
+    const newStart=document.getElementById('newStart');
+    const newTarget=document.getElementById('newTarget');
+    const newColor=document.getElementById('newColor');
+    const newDate=document.getElementById('newDate');
+    const newGroup=document.getElementById('newGroup');
+    const addGoalBtn=document.getElementById('addGoal');
+    const modal=document.getElementById('modal');
+    const modalTitle=document.getElementById('modalTitle');
+    const amtInput=document.getElementById('amtInput');
+    const amtType=document.getElementById('amtType');
+    const amtCat=document.getElementById('amtCat');
+    const amtNote=document.getElementById('amtNote');
+    const confirmAmt=document.getElementById('confirmAmt');
+    const closeModal=document.getElementById('closeModal');
+    const transModal=document.getElementById('transModal');
+    const transTitle=document.getElementById('transTitle');
+    const transList=document.getElementById('transList');
+    const closeTrans=document.getElementById('closeTrans');
+    const catModal=document.getElementById('catModal');
+    const catTitle=document.getElementById('catTitle');
+    const catList=document.getElementById('catList');
+    const closeCat=document.getElementById('closeCat');
+    const themeBtn=document.getElementById('themeBtn');
+    let currentTargetGoal=null;
+
+    function save(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(goals)); }
+
+    function calcSummary(){
+      let totalSaved=0,totalTarget=0;
+      const categories={Food:0,Transportation:0,Entertainment:0,Bills:0,Other:0};
+      goals.forEach(g=>{
+        totalSaved+=g.amount;
+        if(g.target) totalTarget+=g.target;
+        (g.transactions||[]).forEach(t=>{
+          if(t.type==='subtract') categories[t.category]+=t.amount;
+        });
+      });
+      const remaining=totalTarget?totalTarget-totalSaved:null;
+      return {totalSaved,totalTarget,remaining,categories};
+    }
+
+    function renderSummary(){
+      const s=calcSummary();
+      let html=`<h2>Summary</h2>`;
+      html+=`<div>Total Saved: ${formatCurrency(s.totalSaved)}</div>`;
+      if(s.totalTarget) html+=`<div>Total Target: ${formatCurrency(s.totalTarget)}</div>`;
+      if(s.remaining!==null) html+=`<div>Remaining: ${formatCurrency(s.remaining)}</div>`;
+      html+="<h3>By Category</h3><ul>";
+      for(const cat in s.categories){
+        html+=`<li><span>${cat}</span><span>${formatCurrency(s.categories[cat])}</span><button data-cat="${cat}">📜</button></li>`;
+      }
+      html+="</ul>";
+      document.getElementById('summary').innerHTML=html;
+      document.querySelectorAll('#summary button[data-cat]').forEach(b=>b.onclick=()=>showCategory(b.dataset.cat));
+    }
+
+    function render(){
+      renderSummary();
+      gridContainer.innerHTML='';
+      const groups={}; goals.forEach(g=>{groups[g.group||'Ungrouped']=groups[g.group||'Ungrouped']||[]; groups[g.group||'Ungrouped'].push(g)});
+      for(const group in groups){
+        const h=document.createElement('div');h.className='group-header';h.innerHTML=`<span>${group}</span><button data-edit-group="${group}">✎</button>`;gridContainer.appendChild(h);
+        const grid=document.createElement('div');grid.className='grid';gridContainer.appendChild(grid);
+        groups[group].forEach(g=>{
+          const progress=g.target?Math.min(100,Math.round((g.amount/g.target)*100)):null;
+          const remaining=g.target?g.target-g.amount:null;
+          const el=document.createElement('div');el.className='goal';
+          el.innerHTML=`
+            <div class="left">
+              <div class="badge" style="background:${g.color}">${g.name[0]}</div>
+              <div class="meta">
+                <div class="name">${escapeHtml(g.name)}</div>
+                <div class="note">${g.statementDate?`Statement: ${g.statementDate}`:''}</div>
+              </div>
+            </div>
+            <div class="right">
+              <div class="amount">${formatCurrency(g.amount)}${g.target?` / ${formatCurrency(g.target)}`:''}${remaining!==null?`<br><small>Remaining: ${formatCurrency(remaining)}</small>`:''}</div>
+              ${progress!==null?`<div class="progress"><div style="width:${progress}%;background:${g.color}"></div></div>`:''}
+              <div class="actions">
+                <button class="add" data-id="${g.id}">➕</button>
+                <button class="add" data-edit="${g.id}">✎</button>
+                <button class="add" data-del="${g.id}">🗑️</button>
+                <button class="add" data-trans="${g.id}">📜</button>
+              </div>
+            </div>`;
+          grid.appendChild(el);
+        });
+      }
+      document.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>openModalFor(b.dataset.id));
+      document.querySelectorAll('button[data-edit]').forEach(b=>b.onclick=()=>editGoal(b.dataset.edit));
+      document.querySelectorAll('button[data-del]').forEach(b=>b.onclick=()=>deleteGoal(b.dataset.del));
+      document.querySelectorAll('button[data-trans]').forEach(b=>b.onclick=()=>showTransactions(b.dataset.trans));
+      document.querySelectorAll('button[data-edit-group]').forEach(b=>b.onclick=()=>editGroup(b.dataset.editGroup));
+    }
+
+    function openModalFor(id){currentTargetGoal=goals.find(x=>x.id===id);modalTitle.textContent=`Update — ${currentTargetGoal.name}`;amtInput.value='';amtNote.value='';amtType.value='add';modal.classList.add('show');}
+    function closeModalFn(){modal.classList.remove('show');}
+    closeModal.onclick=closeModalFn; modal.onclick=e=>{if(e.target===modal)closeModalFn();}
+
+    confirmAmt.onclick=()=>{
+      const val=parseFloat(amtInput.value||'0');if(isNaN(val)){alert('Enter number');return;}
+      if(!currentTargetGoal)return;
+      const txn={id:uid(),date:new Date().toISOString().split('T')[0],type:amtType.value,category:amtCat.value,amount:val,note:amtNote.value};
+      if(!currentTargetGoal.transactions)currentTargetGoal.transactions=[];
+      currentTargetGoal.transactions.push(txn);
+      if(amtType.value==='
