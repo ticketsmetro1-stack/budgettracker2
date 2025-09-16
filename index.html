@@ -3,252 +3,268 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Budget PWA — 2-column Goals</title>
-
+  <title>Budget PWA — Clean Build</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Budget PWA">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
   <style>
-    :root{
-      --bg:#f4f6f8; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --radius:16px;
-      --gap:16px; --text:#111827;
-      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;
-    }
-    [data-theme="dark"]{
-      --bg:#0f172a; --card:#1e293b; --muted:#94a3b8; --accent:#3b82f6; --text:#f1f5f9;
-    }
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
-    .app{max-width:900px;margin:24px auto;padding:16px;}
-    header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-    h1{font-size:22px;font-weight:700;margin:0;color:var(--text)}
-    .controls{margin-left:auto;display:flex;gap:10px}
-    button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:12px;font-size:14px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.1);transition:all .2s}
-    button:hover{opacity:.9;}
+    :root{--bg:#f4f6f8;--card:#fff;--muted:#6b7280;--accent:#2563eb;--radius:14px;--gap:14px;--text:#111827;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    [data-theme="dark"]{--bg:#0b1220;--card:#0f1724;--muted:#9aa8bf;--accent:#3b82f6;--text:#e6eef8}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    .app{max-width:980px;margin:18px auto;padding:16px}
+    header{display:flex;align-items:center;gap:12px}
+    h1{font-size:20px;margin:0}
+    .controls{margin-left:auto;display:flex;gap:8px}
+    .btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:10px;cursor:pointer}
+    .btn.secondary{background:#fff;color:var(--accent);border:1px solid #e6eefc}
 
-    .group-header{font-weight:700;margin-top:20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-    .group-header button{background:none;color:var(--muted);font-size:14px;padding:0 6px}
+    .summary{margin:16px 0;padding:12px;border-radius:12px;background:var(--card);box-shadow:0 6px 18px rgba(11,12,30,0.04)}
+    .summary h2{margin:0 0 8px;font-size:16px}
+    .summary .totals{display:flex;gap:12px;flex-wrap:wrap}
+    .totals .tile{padding:8px 10px;border-radius:10px;background:transparent;border:1px solid rgba(0,0,0,0.04)}
+    .summary ul{list-style:none;padding:0;margin:12px 0 0}
+    .summary li{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}
+    .summary button.icon{background:none;border:none;color:var(--muted);cursor:pointer}
 
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--gap);}
-    .goal{display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:var(--radius);background:var(--card);box-shadow:0 6px 20px rgba(0,0,0,0.05);transition:transform .2s;flex-wrap:wrap}
-    .goal:hover{transform:translateY(-2px)}
-    .left{display:flex;gap:12px;align-items:center;flex:1;min-width:160px}
-    .badge{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.15)}
-    .meta{display:flex;flex-direction:column}
-    .name{font-weight:600;font-size:15px}
+    .form{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+    input,select{padding:10px;border-radius:10px;border:1px solid #d1d5db;background:var(--card);color:var(--text)}
+    input[type=color]{padding:0;width:44px;height:44px}
+
+    .group{margin-top:18px}
+    .group-header{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+    .group-title{font-weight:700}
+    .edit-group{background:none;border:none;color:var(--muted);cursor:pointer}
+
+    /* grid: 2-column per group on mobile and desktop responsive */
+    .goals-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media(min-width:560px){ .goals-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))} }
+
+    .card{display:flex;flex-direction:column;justify-content:space-between;padding:12px;border-radius:12px;background:var(--card);box-shadow:0 6px 18px rgba(11,12,30,0.04)}
+    .card .top{display:flex;gap:10px;align-items:center}
+    .badge{width:44px;height:44px;border-radius:10px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .meta{flex:1}
+    .name{font-weight:700}
     .note{font-size:12px;color:var(--muted)}
-    .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:140px}
-    .amount{font-weight:700;font-size:16px;color:var(--text)}
-    .progress{width:100%;height:6px;background:#e5e7eb;border-radius:8px;overflow:hidden;margin-top:4px}
-    .progress>div{height:100%;background:var(--accent);transition:width .3s}
-    [data-theme="dark"] .progress{background:#334155}
-    .actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-    .add{padding:6px 10px;border-radius:8px;background:#f3f4f6;color:#111827;border:none;cursor:pointer;transition:background .2s}
-    .add:hover{background:#e5e7eb}
-    [data-theme="dark"] .add{background:#334155;color:#f1f5f9}
-    [data-theme="dark"] .add:hover{background:#475569}
-
-    .form{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
-    input,select{padding:10px 12px;border-radius:10px;border:1px solid #d1d5db;font-size:14px;background:var(--card);color:var(--text)}
-    input[type=color]{width:42px;height:42px;border:none;border-radius:8px;padding:0;cursor:pointer}
+    .amount{font-weight:800;margin-top:8px}
+    .remaining{font-size:13px;color:var(--muted)}
+    .progress{height:8px;background:#eef3ff;border-radius:8px;overflow:hidden;margin-top:8px}
+    .progress > div{height:100%;transition:width .25s}
+    .actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+    .action-btn{padding:6px 8px;border-radius:8px;border:none;background:#f3f4f6;cursor:pointer}
 
     footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
 
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px)}
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(3,6,23,0.45);z-index:60}
     .modal.show{display:flex}
-    .sheet{background:var(--card);padding:20px;border-radius:var(--radius);min-width:280px;max-width:400px;box-shadow:0 10px 30px rgba(0,0,0,0.15)}
-    .transactions{margin-top:10px;font-size:13px;max-height:250px;overflow-y:auto}
-    .transaction{padding:6px 0;border-bottom:1px solid #d1d5db;display:flex;justify-content:space-between;align-items:center}
-    .transaction span{margin-right:8px}
-    .summary{margin-bottom:20px;padding:12px;border-radius:var(--radius);background:var(--card);box-shadow:0 4px 12px rgba(0,0,0,0.05)}
-    .summary h2{margin:0 0 8px;font-size:18px}
-    .summary ul{list-style:none;padding:0;margin:0}
-    .summary li{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
-    .summary li span:first-child{font-weight:500}
+    .sheet{background:var(--card);padding:14px;border-radius:12px;min-width:300px;max-width:460px}
+    .transactions{max-height:320px;overflow:auto;margin-top:8px}
+    .txn{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e6eaf3}
+    .small{font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
-  <div class="app" id="app">
+  <div class="app">
     <header>
-      <h1>Budget Goals</h1>
+      <h1>Budget — Goals</h1>
       <div class="controls">
-        <button id="themeBtn">🌙</button>
-        <button id="importBtn">Import</button>
-        <button id="exportBtn">Export</button>
-        <button id="resetBtn">Reset</button>
+        <button id="themeBtn" class="btn">🌙</button>
+        <button id="exportBtn" class="btn">Export JSON</button>
+        <button id="importBtn" class="btn">Import</button>
+        <button id="exportCsv" class="btn">Export CSV</button>
       </div>
     </header>
 
     <section id="summary" class="summary"></section>
 
     <section>
-      <div class="form">
-        <input id="newName" placeholder="Goal name" type="text">
-        <input id="newStart" placeholder="Start amount" type="number" value="0">
-        <input id="newTarget" placeholder="Target (optional)" type="number">
-        <input id="newDate" placeholder="Statement date (YYYY-MM-DD)" type="text">
-        <input id="newGroup" placeholder="Group" type="text">
-        <input id="newColor" type="color" value="#10b981" title="Pick color">
-        <button id="addGoal">Add Goal</button>
+      <div class="form" id="addForm">
+        <input id="newName" placeholder="Goal name">
+        <input id="newStart" type="number" placeholder="Start amount" value="0">
+        <input id="newTarget" type="number" placeholder="Target (optional)">
+        <input id="newDate" placeholder="Statement date (YYYY-MM-DD)">
+        <input id="newGroup" placeholder="Group (e.g. Personal)">
+        <input id="newColor" type="color" value="#10b981">
+        <button id="addGoal" class="btn">Add Goal</button>
       </div>
 
-      <div id="gridContainer"></div>
+      <div id="groupsContainer"></div>
     </section>
 
-    <footer>
-      Double tap back of iPhone → Shortcut → Opens this app. Works offline after first load.
-    </footer>
+    <footer>Double tap back of iPhone → Shortcut → Open this app. Works offline after first load.</footer>
   </div>
 
-  <!-- modal for adding amount -->
-  <div id="modal" class="modal"><div class="sheet">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <strong id="modalTitle">Add amount</strong>
-        <button id="closeModal">✕</button>
-      </div>
-      <label class="note">Amount</label>
-      <input id="amtInput" type="number" placeholder="e.g. 50" style="width:100%;margin-bottom:10px">
-      <label class="note">Category</label>
-      <select id="amtCat" style="width:100%;margin-bottom:10px">
+  <!-- Add/Subtract modal -->
+  <div id="txnModal" class="modal"><div class="sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center"><strong id="txnTitle">Transaction</strong><button id="closeTxn">✕</button></div>
+    <div style="margin-top:8px">
+      <label class="small">Amount</label>
+      <input id="txnAmount" type="number" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #e6eaf3">
+      <label class="small" style="margin-top:8px;display:block">Category</label>
+      <select id="txnCat" style="width:100%;padding:8px;margin-top:6px;border-radius:8px">
         <option>Food</option><option>Transportation</option><option>Entertainment</option><option>Bills</option><option>Other</option>
       </select>
-      <label class="note">Note</label>
-      <input id="amtNote" type="text" placeholder="Optional note" style="width:100%;margin-bottom:10px">
-      <label class="note">Action</label>
-      <select id="amtType" style="width:100%;margin-bottom:14px">
-        <option value="add">Add</option><option value="subtract">Subtract</option>
-      </select>
-      <div style="display:flex;gap:10px;justify-content:flex-end"><button id="confirmAmt">Confirm</button></div>
-    </div></div>
+      <label class="small" style="margin-top:8px;display:block">Note</label>
+      <input id="txnNote" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #e6eaf3">
+      <label class="small" style="margin-top:8px;display:block">Type</label>
+      <select id="txnType" style="width:100%;padding:8px;margin-top:6px;border-radius:8px"><option value="subtract">Spend</option><option value="add">Add</option></select>
+      <div style="text-align:right;margin-top:12px"><button id="txnConfirm" class="btn">Confirm</button></div>
+    </div>
+  </div></div>
 
-  <!-- modal for transactions -->
-  <div id="transModal" class="modal"><div class="sheet">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <strong id="transTitle">Transactions</strong>
-        <button id="closeTrans">✕</button>
-      </div>
-      <div id="transList" class="transactions"></div>
-    </div></div>
+  <!-- Transactions list modal -->
+  <div id="listModal" class="modal"><div class="sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center"><strong id="listTitle">Transactions</strong><button id="closeList">✕</button></div>
+    <div id="listContent" class="transactions"></div>
+  </div></div>
 
-  <!-- modal for category popup -->
+  <!-- Category modal -->
   <div id="catModal" class="modal"><div class="sheet">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <strong id="catTitle">Category Details</strong>
-        <button id="closeCat">✕</button>
-      </div>
-      <div id="catList" class="transactions"></div>
-    </div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><strong id="catTitle">Category</strong><button id="closeCat">✕</button></div>
+    <div id="catContent" class="transactions"></div>
+  </div></div>
+
+  <input id="fileInput" type="file" accept="application/json" style="display:none">
 
   <script>
-    const STORAGE_KEY = 'budget_goals_v3';
+    const STORAGE_KEY='budget_goals_v4';
     function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-    let goals = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const defaultData = [];
+    let goals = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultData;
 
-    const gridContainer=document.getElementById('gridContainer');
+    // Elements
+    const summaryEl=document.getElementById('summary');
+    const groupsContainer=document.getElementById('groupsContainer');
+    const addGoalBtn=document.getElementById('addGoal');
     const newName=document.getElementById('newName');
     const newStart=document.getElementById('newStart');
     const newTarget=document.getElementById('newTarget');
-    const newColor=document.getElementById('newColor');
     const newDate=document.getElementById('newDate');
     const newGroup=document.getElementById('newGroup');
-    const addGoalBtn=document.getElementById('addGoal');
-    const modal=document.getElementById('modal');
-    const modalTitle=document.getElementById('modalTitle');
-    const amtInput=document.getElementById('amtInput');
-    const amtType=document.getElementById('amtType');
-    const amtCat=document.getElementById('amtCat');
-    const amtNote=document.getElementById('amtNote');
-    const confirmAmt=document.getElementById('confirmAmt');
-    const closeModal=document.getElementById('closeModal');
-    const transModal=document.getElementById('transModal');
-    const transTitle=document.getElementById('transTitle');
-    const transList=document.getElementById('transList');
-    const closeTrans=document.getElementById('closeTrans');
+    const newColor=document.getElementById('newColor');
+
+    const txnModal=document.getElementById('txnModal');
+    const txnTitle=document.getElementById('txnTitle');
+    const txnAmount=document.getElementById('txnAmount');
+    const txnCat=document.getElementById('txnCat');
+    const txnNote=document.getElementById('txnNote');
+    const txnType=document.getElementById('txnType');
+    const txnConfirm=document.getElementById('txnConfirm');
+    const closeTxn=document.getElementById('closeTxn');
+
+    const listModal=document.getElementById('listModal');
+    const listTitle=document.getElementById('listTitle');
+    const listContent=document.getElementById('listContent');
+    const closeList=document.getElementById('closeList');
+
     const catModal=document.getElementById('catModal');
     const catTitle=document.getElementById('catTitle');
-    const catList=document.getElementById('catList');
+    const catContent=document.getElementById('catContent');
     const closeCat=document.getElementById('closeCat');
-    const themeBtn=document.getElementById('themeBtn');
-    let currentTargetGoal=null;
 
-    function save(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(goals)); }
+    const fileInput=document.getElementById('fileInput');
 
+    let activeGoalId=null;
+
+    // Utils
+    function save(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(goals)); render(); }
+    function formatCurrency(n){ return new Intl.NumberFormat('en-EG',{style:'currency',currency:'EGP',maximumFractionDigits:0}).format(n); }
+    function escape(s){ return (s||'').toString().replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+    // Summary
     function calcSummary(){
-      let totalSaved=0,totalTarget=0;
-      const categories={Food:0,Transportation:0,Entertainment:0,Bills:0,Other:0};
-      goals.forEach(g=>{
-        totalSaved+=g.amount;
-        if(g.target) totalTarget+=g.target;
-        (g.transactions||[]).forEach(t=>{
-          if(t.type==='subtract') categories[t.category]+=t.amount;
-        });
-      });
-      const remaining=totalTarget?totalTarget-totalSaved:null;
+      let totalSaved=0,totalTarget=0; const categories={Food:0,Transportation:0,Entertainment:0,Bills:0,Other:0};
+      goals.forEach(g=>{ totalSaved += Number(g.amount||0); if(g.target) totalTarget += Number(g.target||0); (g.transactions||[]).forEach(t=>{ if(t.type==='subtract') categories[t.category] = (categories[t.category]||0) + Number(t.amount||0); }); });
+      const remaining = totalTarget? totalTarget - totalSaved : null;
       return {totalSaved,totalTarget,remaining,categories};
     }
 
-    function renderSummary(){
-      const s=calcSummary();
-      let html=`<h2>Summary</h2>`;
-      html+=`<div>Total Saved: ${formatCurrency(s.totalSaved)}</div>`;
-      if(s.totalTarget) html+=`<div>Total Target: ${formatCurrency(s.totalTarget)}</div>`;
-      if(s.remaining!==null) html+=`<div>Remaining: ${formatCurrency(s.remaining)}</div>`;
-      html+="<h3>By Category</h3><ul>";
-      for(const cat in s.categories){
-        html+=`<li><span>${cat}</span><span>${formatCurrency(s.categories[cat])}</span><button data-cat="${cat}">📜</button></li>`;
-      }
-      html+="</ul>";
-      document.getElementById('summary').innerHTML=html;
-      document.querySelectorAll('#summary button[data-cat]').forEach(b=>b.onclick=()=>showCategory(b.dataset.cat));
+    function renderSummary(){ const s=calcSummary(); let html=`<h2>Summary</h2><div class="totals">`;
+      html += `<div class="tile">Total Saved<br><strong>${formatCurrency(s.totalSaved)}</strong></div>`;
+      if(s.totalTarget) html += `<div class="tile">Total Target<br><strong>${formatCurrency(s.totalTarget)}</strong></div>`;
+      if(s.remaining!==null) html += `<div class="tile">Remaining<br><strong>${formatCurrency(s.remaining)}</strong></div>`;
+      html += `</div><h3 style="margin-top:10px">By Category</h3><ul>`;
+      for(const k of Object.keys(s.categories)){ html += `<li><span>${k}</span><span>${formatCurrency(s.categories[k])}</span><button class="icon" data-cat="${k}">📜</button></li>`; }
+      html += `</ul>`; summaryEl.innerHTML = html; document.querySelectorAll('#summary button[data-cat]').forEach(b=>b.onclick=()=>openCategoryPopup(b.dataset.cat)); }
+
+    // Groups + Goals rendering
+    function renderGroups(){ groupsContainer.innerHTML=''; const groupsMap={}; goals.forEach(g=>{ const key = g.group||'Ungrouped'; groupsMap[key] = groupsMap[key]||[]; groupsMap[key].push(g); });
+      Object.keys(groupsMap).forEach(groupName=>{ const groupWrap=document.createElement('div'); groupWrap.className='group'; const header=document.createElement('div'); header.className='group-header'; header.innerHTML=`<div class="group-title">${escape(groupName)}</div><div><button class="edit-group" data-group="${escape(groupName)}">✎</button></div>`; groupWrap.appendChild(header);
+        const grid=document.createElement('div'); grid.className='goals-grid'; groupsMap[groupName].forEach(g=>{ const card=document.createElement('div'); card.className='card'; const progress = g.target? Math.max(0, Math.min(100, Math.round((g.amount/g.target)*100))) : null; const remaining = (g.target!=null)? g.target - g.amount : null;
+            card.innerHTML = `<div class="top"><div class="badge" style="background:${g.color}">${escape((g.name||'')[0]||'G')}</div><div class="meta"><div class="name">${escape(g.name)}</div><div class="note">${g.statementDate?`Statement: ${escape(g.statementDate)}`:escape(g.note||'')}</div></div></div><div class="amount">${formatCurrency(g.amount)}${g.target?` / ${formatCurrency(g.target)}`:''}<div class="small remaining">${remaining!=null?`Remaining: ${formatCurrency(remaining)}`:''}</div></div>${progress!=null?`<div class="progress"><div style="width:${progress}%;background:${g.color}"></div></div>`:''}<div class="actions"><button class="action-btn" data-add="${g.id}">➕</button><button class="action-btn" data-edit="${g.id}">✎</button><button class="action-btn" data-del="${g.id}">🗑️</button><button class="action-btn" data-list="${g.id}">📜</button></div>`;
+            grid.appendChild(card);
+        }); groupWrap.appendChild(grid); groupsContainer.appendChild(groupWrap);
+      });
+      // attach listeners
+      document.querySelectorAll('.action-btn[data-add]').forEach(b=>b.onclick=()=>openTxn(b.dataset.add));
+      document.querySelectorAll('.action-btn[data-edit]').forEach(b=>b.onclick=()=>openEditGoal(b.dataset.edit));
+      document.querySelectorAll('.action-btn[data-del]').forEach(b=>b.onclick=()=>deleteGoal(b.dataset.del));
+      document.querySelectorAll('.action-btn[data-list]').forEach(b=>b.onclick=()=>openList(b.dataset.list));
+      document.querySelectorAll('.edit-group').forEach(b=>b.onclick=()=>editGroupName(b.dataset.group));
     }
 
-    function render(){
-      renderSummary();
-      gridContainer.innerHTML='';
-      const groups={}; goals.forEach(g=>{groups[g.group||'Ungrouped']=groups[g.group||'Ungrouped']||[]; groups[g.group||'Ungrouped'].push(g)});
-      for(const group in groups){
-        const h=document.createElement('div');h.className='group-header';h.innerHTML=`<span>${group}</span><button data-edit-group="${group}">✎</button>`;gridContainer.appendChild(h);
-        const grid=document.createElement('div');grid.className='grid';gridContainer.appendChild(grid);
-        groups[group].forEach(g=>{
-          const progress=g.target?Math.min(100,Math.round((g.amount/g.target)*100)):null;
-          const remaining=g.target?g.target-g.amount:null;
-          const el=document.createElement('div');el.className='goal';
-          el.innerHTML=`
-            <div class="left">
-              <div class="badge" style="background:${g.color}">${g.name[0]}</div>
-              <div class="meta">
-                <div class="name">${escapeHtml(g.name)}</div>
-                <div class="note">${g.statementDate?`Statement: ${g.statementDate}`:''}</div>
-              </div>
-            </div>
-            <div class="right">
-              <div class="amount">${formatCurrency(g.amount)}${g.target?` / ${formatCurrency(g.target)}`:''}${remaining!==null?`<br><small>Remaining: ${formatCurrency(remaining)}</small>`:''}</div>
-              ${progress!==null?`<div class="progress"><div style="width:${progress}%;background:${g.color}"></div></div>`:''}
-              <div class="actions">
-                <button class="add" data-id="${g.id}">➕</button>
-                <button class="add" data-edit="${g.id}">✎</button>
-                <button class="add" data-del="${g.id}">🗑️</button>
-                <button class="add" data-trans="${g.id}">📜</button>
-              </div>
-            </div>`;
-          grid.appendChild(el);
-        });
-      }
-      document.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>openModalFor(b.dataset.id));
-      document.querySelectorAll('button[data-edit]').forEach(b=>b.onclick=()=>editGoal(b.dataset.edit));
-      document.querySelectorAll('button[data-del]').forEach(b=>b.onclick=()=>deleteGoal(b.dataset.del));
-      document.querySelectorAll('button[data-trans]').forEach(b=>b.onclick=()=>showTransactions(b.dataset.trans));
-      document.querySelectorAll('button[data-edit-group]').forEach(b=>b.onclick=()=>editGroup(b.dataset.editGroup));
+    // Open transaction modal
+    function openTxn(goalId){ activeGoalId = goalId; const g = goals.find(x=>x.id===goalId); txnTitle.textContent = `Transaction — ${g.name}`; txnAmount.value=''; txnNote.value=''; txnType.value='subtract'; txnCat.value='Food'; txnModal.classList.add('show'); }
+    function closeTxnFn(){ txnModal.classList.remove('show'); }
+    closeTxn.onclick = closeTxnFn; txnModal.onclick = e=>{ if(e.target===txnModal) closeTxnFn(); }
+
+    txnConfirm.onclick = ()=>{
+      const val = parseFloat(txnAmount.value||'0'); if(isNaN(val)|| val<=0){ alert('Enter a positive amount'); return; }
+      const g = goals.find(x=>x.id===activeGoalId); if(!g) return;
+      const t = { id: uid(), date: new Date().toISOString().split('T')[0], type: txnType.value, category: txnCat.value, amount: val, note: txnNote.value||'' };
+      g.transactions = g.transactions||[]; g.transactions.push(t);
+      if(txnType.value==='add') g.amount = Number(g.amount||0) + val; else g.amount = Number(g.amount||0) - val;
+      save(); closeTxnFn();
     }
 
-    function openModalFor(id){currentTargetGoal=goals.find(x=>x.id===id);modalTitle.textContent=`Update — ${currentTargetGoal.name}`;amtInput.value='';amtNote.value='';amtType.value='add';modal.classList.add('show');}
-    function closeModalFn(){modal.classList.remove('show');}
-    closeModal.onclick=closeModalFn; modal.onclick=e=>{if(e.target===modal)closeModalFn();}
+    // Open transactions list for a goal
+    function openList(goalId){ const g = goals.find(x=>x.id===goalId); listTitle.textContent = `Transactions — ${g.name}`; listContent.innerHTML = '';
+      (g.transactions||[]).slice().reverse().forEach(t=>{ const row=document.createElement('div'); row.className='txn'; row.innerHTML = `<div><div><strong>${t.category}</strong> <span class="small">${t.note||''}</span></div><div class="small">${t.date}</div></div><div><div>${t.type==='add'?'+':'-'}${formatCurrency(t.amount)}</div><div style="display:flex;gap:6px;margin-top:6px"><button data-edit-t="${t.id}">Edit</button><button data-del-t="${t.id}">Delete</button></div></div>`; listContent.appendChild(row); });
+      // attach txn edit/delete
+      listContent.querySelectorAll('button[data-del-t]').forEach(b=>b.onclick=()=>{ if(confirm('Delete transaction?')){ deleteTransaction(goalId,b.dataset.delT); } });
+      listContent.querySelectorAll('button[data-edit-t]').forEach(b=>b.onclick=()=>{ editTransaction(goalId,b.dataset.editT); });
+      listModal.classList.add('show');
+    }
+    closeList.onclick = ()=>listModal.classList.remove('show'); listModal.onclick = e=>{ if(e.target===listModal) listModal.classList.remove('show'); }
 
-    confirmAmt.onclick=()=>{
-      const val=parseFloat(amtInput.value||'0');if(isNaN(val)){alert('Enter number');return;}
-      if(!currentTargetGoal)return;
-      const txn={id:uid(),date:new Date().toISOString().split('T')[0],type:amtType.value,category:amtCat.value,amount:val,note:amtNote.value};
-      if(!currentTargetGoal.transactions)currentTargetGoal.transactions=[];
-      currentTargetGoal.transactions.push(txn);
-      if(amtType.value==='
+    function deleteTransaction(goalId, tid){ const g = goals.find(x=>x.id===goalId); g.transactions = (g.transactions||[]).filter(t=>t.id!==tid); save(); openList(goalId); }
+    function editTransaction(goalId, tid){ const g = goals.find(x=>x.id===goalId); const t = (g.transactions||[]).find(x=>x.id===tid); if(!t) return; const newAmt = prompt('Amount',t.amount); const newNote = prompt('Note', t.note||''); if(newAmt==null) return; t.amount = parseFloat(newAmt)||t.amount; t.note = newNote; save(); openList(goalId); }
+
+    // Category popup
+    function openCategoryPopup(cat){ catTitle.textContent = `Category — ${cat}`; catContent.innerHTML=''; goals.forEach(g=>{ (g.transactions||[]).filter(t=>t.category===cat && t.type==='subtract').forEach(t=>{ const row=document.createElement('div'); row.className='txn'; row.innerHTML = `<div><div><strong>${g.name}</strong> <span class="small">${t.note||''}</span></div><div class="small">${t.date}</div></div><div>${formatCurrency(t.amount)}</div>`; catContent.appendChild(row); }); }); catModal.classList.add('show'); }
+    closeCat.onclick = ()=>catModal.classList.remove('show'); catModal.onclick = e=>{ if(e.target===catModal) catModal.classList.remove('show'); }
+
+    // Edit goal (rename, color, target, date, note, group)
+    function openEditGoal(goalId){ const g = goals.find(x=>x.id===goalId); const name = prompt('Goal name',g.name); if(!name) return; const note = prompt('Note (optional)',g.note||''); const color = prompt('Color hex',g.color)||g.color; const targetStr = prompt('Target amount (optional)', g.target||''); const target = targetStr?parseFloat(targetStr):null; const date = prompt('Statement date (YYYY-MM-DD)',g.statementDate||''); const group = prompt('Group', g.group||''); g.name=name; g.note=note; g.color=color; g.target=target; g.statementDate=date; g.group=group; save(); }
+
+    function deleteGoal(goalId){ if(!confirm('Delete this goal?')) return; goals = goals.filter(g=>g.id!==goalId); save(); }
+
+    // Edit group name: rename all goals in that group to new group name
+    function editGroupName(oldGroup){ const newName = prompt('Edit group name', oldGroup); if(newName==null) return; goals.forEach(g=>{ if((g.group||'Ungrouped')===oldGroup){ g.group = newName; } }); save(); }
+
+    // Add new goal
+    addGoalBtn.onclick = ()=>{ const name = newName.value.trim(); if(!name){ alert('Enter a name'); return; } const start = parseFloat(newStart.value)||0; const target = newTarget.value?parseFloat(newTarget.value):null; const date = newDate.value.trim()||''; const group = newGroup.value.trim()||''; const color = newColor.value||'#10b981'; const g = { id: uid(), name, amount: start, target, note:'', color, statementDate: date, group, transactions: [] }; goals.push(g); save(); newName.value=''; newStart.value='0'; newTarget.value=''; newDate.value=''; newGroup.value=''; }
+
+    // Import / Export
+    document.getElementById('exportBtn').onclick = ()=>{ const data = JSON.stringify(goals,null,2); const blob = new Blob([data],{type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='budget-goals.json'; a.click(); URL.revokeObjectURL(url); }
+    document.getElementById('importBtn').onclick = ()=>{ fileInput.click(); }
+    fileInput.onchange = e => { const f = e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload = ev => { try{ const j=JSON.parse(ev.target.result); if(Array.isArray(j)){ goals = j; save(); } else alert('Invalid file'); }catch(err){ alert('Invalid JSON'); } }; r.readAsText(f); }
+
+    // Export CSV (transactions flattened)
+    document.getElementById('exportCsv').onclick = ()=>{
+      const rows = [['goal_id','goal_name','date','type','category','amount','note','group']];
+      goals.forEach(g=>{ (g.transactions||[]).forEach(t=> rows.push([g.id,g.name,t.date,t.type,t.category,t.amount,t.note,g.group||''])); });
+      const csv = rows.map(r=>r.map(c=>`"${(''+(c||'')).replace(/"/g,'""')}"`).join(',')).join('
+'); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='budget-transactions.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // Theme toggle
+    const themeBtn = document.getElementById('themeBtn'); function setTheme(mode){ document.documentElement.setAttribute('data-theme',mode); localStorage.setItem('theme',mode); themeBtn.textContent = mode==='dark' ? '☀️' : '🌙'; }
+    themeBtn.onclick = ()=>{ const cur = document.documentElement.getAttribute('data-theme')||'light'; setTheme(cur==='light'?'dark':'light'); }
+    setTheme(localStorage.getItem('theme')||'light');
+
+    // init
+    function render(){ renderSummary(); renderGroups(); }
+    render();
+  </script>
+</body>
+</html>
